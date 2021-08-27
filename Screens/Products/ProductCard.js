@@ -14,7 +14,6 @@ var backupImg = 'https://cdn.pixabay.com/photo/2012/04/01/17/29/box-23649_960_72
 
 const ProductCard = props => {
     const {name, price, image, countInStock } = props;
-    console.log(image)
     return (
         <View style={styles.container}>
             <Image 
@@ -29,21 +28,21 @@ const ProductCard = props => {
             <Text style={styles.price}>${price}</Text>
             {countInStock > 0? (
                 <View style={{marginBottom: 60}}>
-                    <EasyButton 
-                        primary
-                        medium
-                        onPress={() => {
-                            props.addItemToCart(props),
-                            Toast.show({
-                                topOffset: 60,
-                                type: 'success',
-                                text1: `${name} added to Cart`,
-                                text2: 'Go to your cart to complete order'
-                            })
-                        }}
-                    >
-                        <Text style={{color: 'white'}}>Add</Text>
-                    </EasyButton>
+                <EasyButton 
+                    primary
+                    medium
+                    onPress={() => {
+                    props.addItemToCart(props.id),
+                    Toast.show({
+                    topOffset: 60,
+                    type: "success",
+                    text1: `${name} added to Cart`,
+                    text2: "Go to your cart to complete order"
+                    })
+                    }}
+               >
+                <Text style={{ color: "white"}}>Add</Text>
+             </EasyButton>
                 </View>
             ) : <Text style={{ marginTop: 20 }}>Currently Unavailable</Text>}
         </View>

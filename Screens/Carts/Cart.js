@@ -1,11 +1,14 @@
-import React from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import { Button, Dimensions, StyleSheet, TouchableOpacity, View } from 'react-native';
 import { Container, Text, Left, Right, H1, Thumbnail, ListItem, Body } from 'native-base';
 // import  Icon  from 'react-native-vector-icons/FontAwesome';
 import { SwipeListView } from 'react-native-swipe-list-view';
 import { Ionicons as Icon} from '@expo/vector-icons'
 
+import AuthGlobal from '../../Context/store/AuthGlobal.js'
 
+import axios from 'axios';
+import baseURL from '../../assets/common/baseUrl.js';
 import { connect } from 'react-redux';
 import * as actions from '../../Redux/Actions/cartActions.js'
 import CartItem from './CartItem.js';
@@ -16,23 +19,51 @@ var { height, width } = Dimensions.get('window');
 
 
 const Cart = (props) => {
-    var total = 0;
-    props.cartItems.forEach(item => {
-        return (total += item.product.price)
-    })
+
+    const context = useContext(AuthGlobal)
+    const [productUpdate, setProductUpdate] = useState();
+    const [totalPrice, setTotalPrice] = useState();
+
+    useEffect(() => {
+        getProducts()
+        return () => {
+          setProductUpdate()
+          setTotalPrice()
+        }
+      }, 
+    [props]);
+
+    const getProducts = () => {
+        var products = [];
+        props.cartItems.forEach(cart => {
+          axios.get(`${baseURL}products/${cart.product}`).then(data => {
+            products.push(data.data.product)
+            setProductUpdate(products)
+            var total = 0;
+            products.forEach(product => {
+              const price = (total += product.price)
+                setTotalPrice(price)
+            });
+          })
+          .catch(e => {
+            console.log(e)
+          })
+        })
+    }
+
     return (
         <React.Fragment>
-            {props.cartItems.length > 0? (
+            {productUpdate? (
                 <Container>
                     <H1 style={{ alignSelf: 'center' }}>Cart</H1>
                     <SwipeListView
-                            data={props.cartItems}
+                            data={productUpdate}
                             
                             renderHiddenItem={(data) => {
                                 return (<View style={[styles.hiddenContainer]}>
                                   <TouchableOpacity 
                                   style={styles.hiddenButton}
-                                  onPress={() => props.removeFromCart(data.item)}
+                                  onPress={() => {props.removeFromCart(data.item.id)}}
                                   >
                                     <Icon name="trash" color={"white"} size={30} />
                                   </TouchableOpacity>
@@ -51,7 +82,7 @@ const Cart = (props) => {
                         />
                     <View style={styles.bottomContainer}>
                         <Left>
-                            <Text style={styles.price}>${total}</Text>
+                            <Text style={styles.price}>${totalPrice}</Text>
                         </Left>
                         <Right>
                             <EasyButton
@@ -64,13 +95,23 @@ const Cart = (props) => {
                             </EasyButton>
                         </Right>
                         <Right>
-                            <EasyButton 
+                            {context.stateUser.isAuthenticated ? (
+                                <EasyButton
                                 primary
                                 medium
                                 onPress={() => props.navigation.navigate('Checkout')}
-                            >
-                                <Text style={{color: 'white'}}>Checkout</Text>
-                            </EasyButton>
+                                >
+                                <Text style={{ color: 'white' }}>Checkout</Text>
+                                </EasyButton>
+                            ) : (
+                                <EasyButton
+                                secondary
+                                medium
+                                onPress={() => props.navigation.navigate('Login')}
+                                >
+                                <Text style={{ color: 'white' }}>Login</Text>
+                                </EasyButton>
+                            )}
                         </Right>
                     </View>
                 </Container>
@@ -91,7 +132,7 @@ const Cart = (props) => {
 const mapStateToProps = (state) => {
     const { cartItems } = state;
     return {
-      cartItems: cartItems,
+      cartItems: cartItems
     };
 };
 
