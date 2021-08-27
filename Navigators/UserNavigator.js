@@ -11,8 +11,8 @@ function MyStack() {
     return (
         <Stack.Navigator>
             <Stack.Screen 
-                name="Login"
-                component={Login}
+                name="User Profile"
+                component={UserProfile}
                 options={{
                     headerShown: false
                 }}
@@ -25,12 +25,14 @@ function MyStack() {
                 }}
             />
             <Stack.Screen 
-                name="User Profile"
-                component={UserProfile}
+                name="Login"
+                component={Login}
                 options={{
                     headerShown: false
                 }}
             />
+            
+            
         </Stack.Navigator>
     )
 }

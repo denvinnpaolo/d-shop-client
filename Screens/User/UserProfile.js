@@ -11,33 +11,41 @@ import baseURL from '../../assets/common/baseUrl';
 // Context
 import AuthGlobal from '../../Context/store/AuthGlobal';
 import { logoutUser } from '../../Context/actions/Auth.actions';
+import OrderCard from '../../Shared/OrderCard';
 
 const Login = (props) => {
     const context = useContext(AuthGlobal);
     const [userProfile, setUserProfile] = useState();
+    const [orders, setOrders] = useState([]);
 
-    useEffect(()=> {
-        if(context.stateUser.isAuthenticated === false || context.stateUser.isAuthenticated === null) {
-            props.navigation.navigate("Login")
-        }
-
-        AsyncStorage.getItem('jwt')
-            .then((res) => {
-                axios
-                    .get(`${baseURL}users/${context.stateUser.user.user}`, {
-                        headers: { Authorization: `Bearer ${res}`}
-                    })
-                    
-                    .then((user) => {setUserProfile(user.data)})
-                    .catch(err => console.log('userProfile useEffect error: ', err))
-
-            })
-        
-        return () => {
-            setUserProfile();
-        }
-
-    }, [context.stateUser.isAuthenticated])
+    useFocusEffect(
+        useCallback(() => {
+            if(context.stateUser.isAuthenticated === false || context.stateUser.isAuthenticated === null) {
+                props.navigation.navigate("Login")
+            }
+    
+            AsyncStorage.getItem('jwt')
+                .then(( res ) => {
+                    axios
+                        .get(`${baseURL}users/${context.stateUser.user.user}`, {
+                            headers: { Authorization: `Bearer ${res}`}
+                        })
+                        
+                        .then(( user ) => {setUserProfile(user.data)})
+                        .catch(( err ) => console.log('userProfile useFocusEffect error: ', err))
+    
+                })
+                .catch(( err ) => console.log(err));
+            
+            axios.get(`${baseURL}orders/get/userorders/${context.stateUser.user.user}`)
+                .then(( o ) => setOrders(o.data))
+                .catch(( err ) => console.log( 'data', err))
+            return () => {
+                setUserProfile();
+                setOrders([]);
+            }
+        }, [context.stateUser.isAuthenticated])
+    )
 
 
     return (
@@ -60,6 +68,18 @@ const Login = (props) => {
                         logoutUser(context.dispatch)
                     ]}/>
                 </View>
+                <View style={styles.order}>
+                    <Text style={{ fontSize: 20 }}>My Orders</Text>
+                    <View>
+                        {orders.length > 0? orders.map(( order ) => {
+                            return <OrderCard key={order.id} {...order}/>
+                        }) : 
+                        <View style={styles.order}>
+                            <Text>You have no orders</Text>
+                        </View>
+                        }
+                    </View>
+                </View>
             </ScrollView>
         </Container>
     )
@@ -73,6 +93,11 @@ const styles = StyleSheet.create({
     subContainer: {
         alignItems: 'center',
         marginTop: 60
+    },
+    order: {
+        marginTop: 20,
+        marginBottom: 60,
+        alignItems: 'center'
     }
 })
 export default Login;

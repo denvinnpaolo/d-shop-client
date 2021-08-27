@@ -1,18 +1,23 @@
-import React, { useEffect, useState } from 'react';
-import { Text, View, Button } from 'react-native';
-import { Item, Picker } from 'native-base';
+import React, { useEffect, useState, useContext } from 'react';
+import { View, Button } from 'react-native';
+import { Item, Picker, Toast } from 'native-base';
 import { FontAwesome as Icon} from '@expo/vector-icons';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 
+// Redux
 import { connect } from 'react-redux';
+// Context
+import AuthGlobal from '../../../Context/store/AuthGlobal.js'
 
+// Form Components
 import FormContainer from '../../../Shared/Form/FormContainer.js';
 import Input from '../../../Shared/Form/Input.js';
 
 const countries = require("../../../assets/data/countries.json");
 
-
 const Checkout = props => {
+
+    const context = useContext(AuthGlobal);
 
     const [orderItems, setOrderItems] = useState()
     const [address, setAddress] = useState()
@@ -22,14 +27,28 @@ const Checkout = props => {
     const [zip, setZip] = useState();
     const [country, setCountry] = useState();
     const [phone, setPhone] = useState();
+    const [user, setUser] = useState();
 
     useEffect(() => {
-        setOrderItems(props.cartItems)
+        setOrderItems(props.cartItems);
+
+        if (context.stateUser.isAuthenticated) {
+            setUser(context.stateUser.user.user);
+        } else {
+            props.navigation.navigate("Cart")
+            Toast.show({
+                topOffset: 60,
+                type: 'error',
+                text1: "Please Login to Checkout",
+                text2: ""
+            })
+        }
+        
         return () => {
-            setOrderItems()
+            setOrderItems();
+            setUser();
         }
     },[]);
-
 
     const checkOut = () => {
         let order = {
@@ -38,8 +57,10 @@ const Checkout = props => {
             dateOrdered: Date.now(),
             orderItems,
             phone, 
+            status: "3",
             shippingAddress1: address,
             shippingAddress2: address2,
+            user: user,
             zip
         }
 
